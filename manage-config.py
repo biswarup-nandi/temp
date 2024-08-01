@@ -9,7 +9,7 @@ def replace_values(config_file, policy_dir, env, system):
         config_data = json.load(file)
 
     # Define the pattern to search for
-    pattern = re.compile(r'!(\w+)\+(\w+)')
+    pattern = re.compile(r'!(\w+)\+(\S+)')
 
     # Function to recursively search and replace values
     def search_and_replace(data):
