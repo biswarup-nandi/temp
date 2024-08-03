@@ -1,0 +1,26 @@
+pipeline {
+    environment {
+        DATABRICKS_HOST = 'https://<databricks-instance>'
+        CLIENT_ID = '<service-principal-client-id>'
+        CLIENT_SECRET = '<service-principal-client-secret>'
+    }
+    stages {
+        stage('Authenticate and Run Databricks CLI') {
+            steps {
+                script {
+                    def patResponse = sh(script: """
+                        curl -X POST "$DATABRICKS_HOST/api/2.0/token/create" \
+                        --header "Content-Type: application/json" \
+                        --user "$CLIENT_ID:$CLIENT_SECRET" \
+                        --data '{
+                          "lifetime_seconds": 3600,
+                          "comment": "PAT for CLI"
+                        }' | jq -r '.token_value'
+                    """, returnStdout: true).trim()
+                    env.DATABRICKS_TOKEN = patResponse
+                }
+                sh 'databricks workspace ls /'
+            }
+        }
+    }
+}
