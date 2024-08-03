@@ -8,16 +8,15 @@ pipeline {
         stage('Authenticate and Run Databricks CLI') {
             steps {
                 script {
-                    def patResponse = sh(script: """
-                        curl -X POST "$DATABRICKS_HOST/api/2.0/token/create" \
-                        --header "Content-Type: application/json" \
-                        --user "$CLIENT_ID:$CLIENT_SECRET" \
-                        --data '{
-                          "lifetime_seconds": 3600,
-                          "comment": "PAT for CLI"
-                        }' | jq -r '.token_value'
+                    def tokenResponse = sh(script: """
+                        curl -X POST "$DATABRICKS_HOST/oidc/v1/token" \
+                        -H "Content-Type: application/x-www-form-urlencoded" \
+                        -d "grant_type=client_credentials" \
+                        -d "client_id=$CLIENT_ID" \
+                        -d "client_secret=$CLIENT_SECRET" \
+                        -d "scope=offline_access openid" | jq -r '.access_token'
                     """, returnStdout: true).trim()
-                    env.DATABRICKS_TOKEN = patResponse
+                    env.DATABRICKS_OAUTH_TOKEN = tokenResponse
                 }
                 sh 'databricks workspace ls /'
             }
